@@ -42,6 +42,12 @@ jobs:
       - name: Build
         run: make -j"$(nproc)"
 
+      - name: Vet
+        working-directory: src/go
+        run: |
+          cmd=$(make -s -n check | grep 'go test')
+          eval "${cmd/go test/go vet}"
+
       - name: Test
         run: make -C src/go check
 
