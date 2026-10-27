@@ -1,0 +1,1 @@
+...G...... [ZBX-28239] fixed system.sw.packages.get becoming unsupported when a dpkg package has a non-integer Installed-Size (EGKrb)

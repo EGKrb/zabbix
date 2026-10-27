@@ -25,8 +25,12 @@ var testData = map[string]map[string]string{
 	"dpkg": {
 		"input": `install ok installed,docker-ce-cli,5:19.03.15~3-0~debian-stretch,amd64,183329
 deinstall ok config-files,docutils-common,0.13.1+dfsg-2,all,670
-install ok installed,dos2unix,7.4.1-1,amd64,1321`,
-		"expectedOutput": `[{"name":"docker-ce-cli","manager":"dpkg","version":"5:19.03.15~3-0~debian-stretch","size":187728896,"arch":"amd64","buildtime":{"timestamp":0,"value":""},"installtime":{"timestamp":0,"value":""}},{"name":"dos2unix","manager":"dpkg","version":"7.4.1-1","size":1352704,"arch":"amd64","buildtime":{"timestamp":0,"value":""},"installtime":{"timestamp":0,"value":""}}]`,
+install ok installed,dos2unix,7.4.1-1,amd64,1321
+install ok installed,synosnap,0.12.10,amd64,1068.865234375
+install ok installed,synology-active-backup-business-linux-service,3.2.1-5059,amd64,204288.181640625
+install ok installed,no-size,1.0,all,
+install ok installed,bad-size,1.0,all,unknown`,
+		"expectedOutput": `[{"name":"docker-ce-cli","manager":"dpkg","version":"5:19.03.15~3-0~debian-stretch","size":187728896,"arch":"amd64","buildtime":{"timestamp":0,"value":""},"installtime":{"timestamp":0,"value":""}},{"name":"dos2unix","manager":"dpkg","version":"7.4.1-1","size":1352704,"arch":"amd64","buildtime":{"timestamp":0,"value":""},"installtime":{"timestamp":0,"value":""}},{"name":"synosnap","manager":"dpkg","version":"0.12.10","size":1094518,"arch":"amd64","buildtime":{"timestamp":0,"value":""},"installtime":{"timestamp":0,"value":""}},{"name":"synology-active-backup-business-linux-service","manager":"dpkg","version":"3.2.1-5059","size":209191098,"arch":"amd64","buildtime":{"timestamp":0,"value":""},"installtime":{"timestamp":0,"value":""}},{"name":"no-size","manager":"dpkg","version":"1.0","size":0,"arch":"all","buildtime":{"timestamp":0,"value":""},"installtime":{"timestamp":0,"value":""}},{"name":"bad-size","manager":"dpkg","version":"1.0","size":0,"arch":"all","buildtime":{"timestamp":0,"value":""},"installtime":{"timestamp":0,"value":""}}]`,
 	},
 	"rpm": {
 		"input": `glibc-gconv-extra,2.34-48.el9,x86_64,8122308,1666100063,1669204555
@@ -79,5 +83,33 @@ func TestPackagesGet(t *testing.T) {
 		} else if expectedOutput != output {
 			t.Errorf("unexpected output from %s, expected\n%s\ngot\n%s", m.name, expectedOutput, output)
 		}
+	}
+}
+
+func Test_dpkgParseSize(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		value string
+		want  uint64
+	}{
+		{"+integer", "1321", 1352704},
+		{"+fractional", "1068.865234375", 1094518},
+		{"+fractionalRounded", "0.0001", 0},
+		{"-empty", "", 0},
+		{"-notANumber", "unknown", 0},
+		{"-negative", "-5", 0},
+		{"-nan", "NaN", 0},
+		{"-inf", "Inf", 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := dpkgParseSize("pkg", tt.value); got != tt.want {
+				t.Fatalf("dpkgParseSize(%q) = %d, want %d", tt.value, got, tt.want)
+			}
+		})
 	}
 }
