@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
 	"sort"
@@ -193,6 +194,39 @@ func appendPackage(name string, manager string, version string, size uint64, arc
 	}
 }
 
+// dpkgParseSize converts the Installed-Size field (in kB) into bytes.
+//
+// According to the Debian project's Policy Manual on Binary package
+// control files[1], the Installed-Size field[2] is not mandatory in
+// the stanza. The query for such packages would return an empty value.
+// Third party packages can also have a non-integer value (e.g. "1068.865234375"),
+// which dpkg accepts and stores as is.
+//
+// Fractional sizes are converted, any other value that cannot be parsed is
+// reported as 0, so a single package does not make the whole list fail.
+//
+// [1]: https://www.debian.org/doc/debian-policy/ch-controlfields.html#binary-package-control-files-debian-control
+// [2]: https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-installed-size
+func dpkgParseSize(name, value string) uint64 {
+	if value == "" {
+		return 0
+	}
+
+	if size, err := strconv.ParseUint(value, 10, 64); err == nil {
+		// the reported size is in kB, we want bytes
+		return size * 1024
+	}
+
+	size, err := strconv.ParseFloat(value, 64)
+	if err != nil || math.IsNaN(size) || math.IsInf(size, 0) || size < 0 {
+		log.Debugf("cannot parse installed size \"%s\" of package \"%s\", reporting 0", value, name)
+
+		return 0
+	}
+
+	return uint64(math.Round(size * 1024))
+}
+
 func dpkgDetails(manager string, in []string, regex string) (out string, err error) {
 	const num_fields = 5
 
@@ -226,30 +260,9 @@ func dpkgDetails(manager string, in []string, regex string) (out string, err err
 			continue
 		}
 
-		var size uint64
-
-		// According to the Debian project's Policy Manual on Binary package
-		// control files[1], the Installed-Size field[2] is not mandatory in
-		// the stanza. The query for such packages would return an empty value,
-		// which strconv obviously fails to parse into an Uint.
-		//
-		// When that is the case, we simply report the size as 0.
-		//
-		// [1]: https://www.debian.org/doc/debian-policy/ch-controlfields.html#binary-package-control-files-debian-control
-		// [2]: https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-installed-size
-
-		if split[4] != "" {
-			size, err = strconv.ParseUint(split[4], 10, 64)
-			if err != nil {
-				return "", err
-			}
-		}
-
-		// the reported size is in kB, we want bytes
-		size *= 1024
-
 		// dpkg has no build/install time information
-		pd = append(pd, appendPackage(split[1], manager, split[2], size, split[3], 0, "", 0, ""))
+		pd = append(pd, appendPackage(split[1], manager, split[2], dpkgParseSize(split[1], split[4]), split[3], 0,
+			"", 0, ""))
 	}
 
 	var b []byte
@@ -761,7 +774,7 @@ func (p *Plugin) handleGetManager(m *manager, targetName, regex string, timeout 
 
 	tmp, err := p.executor.Execute(m.detailsCmd, time.Second*time.Duration(timeout), "")
 	if err != nil {
-		p.Errf("Failed to execute command '%s', err: %s", m.listCmd, err.Error())
+		p.Errf("Failed to execute command '%s', err: %s", m.detailsCmd, err.Error())
 
 		return "", errs.New("failed tmp execution")
 	}
@@ -771,7 +784,7 @@ func (p *Plugin) handleGetManager(m *manager, targetName, regex string, timeout 
 	if tmp != "" {
 		result, err = m.detailsParser(m.name, strings.Split(tmp, "\n"), regex)
 		if err != nil {
-			p.Errf("Failed to parse '%s' output, err: %s", m.listCmd, err.Error())
+			p.Errf("Failed to parse '%s' output, err: %s", m.detailsCmd, err.Error())
 
 			return "", errs.New("failed to get output")
 		}
