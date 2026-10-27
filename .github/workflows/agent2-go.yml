@@ -1,0 +1,55 @@
+# Fork-only workflow: builds Zabbix agent 2 and runs its Go unit tests.
+# Upstream contributions go through support.zabbix.com and git.zabbix.com.
+name: Agent 2 (Go)
+
+on:
+  push:
+    branches: [fork]
+  pull_request:
+    branches: [fork]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: make check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: src/go/go.mod
+          cache-dependency-path: src/go/go.sum
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf automake libtool pkg-config libpcre2-dev libssl-dev zlib1g-dev
+
+      - name: Configure
+        run: |
+          ./bootstrap.sh
+          ./configure --enable-agent2 --with-openssl
+
+      - name: Build
+        run: make -j"$(nproc)"
+
+      - name: Test
+        run: make -C src/go check
+
+      - name: Check formatting of changed Go files
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          files=$(git diff --name-only --diff-filter=AM FETCH_HEAD -- 'src/go/*.go')
+          [ -z "$files" ] && exit 0
+          unformatted=$(gofmt -l $files)
+          [ -z "$unformatted" ] || { echo "Not gofmt-ed:"; echo "$unformatted"; exit 1; }
