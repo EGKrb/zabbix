@@ -61,7 +61,7 @@ zabbix_export:
               name: '{#UNIT.NAME}: Active state'
               type: DEPENDENT
               key: 'systemd.service.active_state["{#UNIT.NAME}"]'
-              description: 'State value that reflects whether the unit is currently active or not. The following states are currently defined: "active", "reloading", "inactive", "failed", "activating", and "deactivating".'
+              description: 'State value that reflects whether the unit is currently active or not. The following states are currently defined: "active", "reloading", "inactive", "failed", "activating", "deactivating", "maintenance", and "refreshing".'
               valuemap:
                 name: 'Unit Active State'
               preprocessing:
@@ -89,7 +89,7 @@ zabbix_export:
               name: '{#UNIT.NAME}: Load state'
               type: DEPENDENT
               key: 'systemd.service.load_state["{#UNIT.NAME}"]'
-              description: 'State value that reflects whether the configuration file of this unit has been loaded. The following states are currently defined: "loaded", "error", and "masked".'
+              description: 'State value that reflects whether the configuration file of this unit has been loaded. The following states are currently defined: "loaded", "error", "masked", "stub", "not-found", "bad-setting", and "merged".'
               valuemap:
                 name: 'Unit Load State'
               preprocessing:
@@ -108,7 +108,7 @@ zabbix_export:
               name: '{#UNIT.NAME}: Unit file state'
               type: DEPENDENT
               key: 'systemd.service.unitfile_state["{#UNIT.NAME}"]'
-              description: 'Encodes the install state of the unit file of FragmentPath. It currently knows the following states: "enabled", "enabled-runtime", "linked", "linked-runtime", "masked", "masked-runtime", "static", "disabled", and "invalid".'
+              description: 'Encodes the install state of the unit file of FragmentPath. It currently knows the following states: "enabled", "enabled-runtime", "linked", "linked-runtime", "masked", "masked-runtime", "static", "disabled", "invalid", "alias", "indirect", "generated", "transient", and "bad".'
               valuemap:
                 name: 'Unit File State'
               preprocessing:
@@ -431,6 +431,10 @@ zabbix_export:
               newvalue: activating
             - value: '6'
               newvalue: deactivating
+            - value: '7'
+              newvalue: maintenance
+            - value: '8'
+              newvalue: refreshing
         - uuid: e0a5e55e5a074a26935386c5e29a0e36
           name: 'Unit File State'
           mappings:
@@ -454,6 +458,16 @@ zabbix_export:
               newvalue: disabled
             - value: '9'
               newvalue: invalid
+            - value: '10'
+              newvalue: alias
+            - value: '11'
+              newvalue: indirect
+            - value: '12'
+              newvalue: generated
+            - value: '13'
+              newvalue: transient
+            - value: '14'
+              newvalue: bad
         - uuid: 0309ef57e92a4ea2ae4404a685f0e7b8
           name: 'Unit Load State'
           mappings:
@@ -465,3 +479,11 @@ zabbix_export:
               newvalue: error
             - value: '3'
               newvalue: masked
+            - value: '4'
+              newvalue: stub
+            - value: '5'
+              newvalue: not-found
+            - value: '6'
+              newvalue: bad-setting
+            - value: '7'
+              newvalue: merged

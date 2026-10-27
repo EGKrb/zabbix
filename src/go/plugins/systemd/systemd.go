@@ -274,14 +274,11 @@ func (p *Plugin) discovery(params []string, conn *dbus.Conn) (interface{}, error
 	}
 
 	for _, f := range unitFiles {
-		unitFileExt := filepath.Ext(f.Name)
-		basePath := filepath.Base(f.Name)
-		if f.EnablementState != "disabled" || (len(ext) != 0 && ext != unitFileExt) ||
-			strings.HasSuffix(strings.TrimSuffix(f.Name, unitFileExt), "@") || /* skip unit templates */
-			isEnabledUnit(array, basePath) {
+		if !isDiscoverableUnitFile(f, ext, array) {
 			continue
 		}
 
+		basePath := filepath.Base(f.Name)
 		unitPath := "/org/freedesktop/systemd1/unit/" + getName(basePath)
 
 		serviceType := p.getServiceType(f.Name, conn)
@@ -368,10 +365,24 @@ func getName(name string) string {
 	return string(nameEsc[:j])
 }
 
+// setUnitStates replaces unit state strings with numeric state and text. New states must be appended to the end
+// of the lists, so that values of already known states (and value maps in templates) do not change.
 func (p *Plugin) setUnitStates(v map[string]interface{}) {
 	mappings := []stateMapping{
-		{"LoadState", []string{"loaded", "error", "masked"}},
-		{"ActiveState", []string{"active", "reloading", "inactive", "failed", "activating", "deactivating"}},
+		{"LoadState", []string{"loaded", "error", "masked", "stub", "not-found", "bad-setting", "merged"}},
+		{
+			"ActiveState",
+			[]string{
+				"active",
+				"reloading",
+				"inactive",
+				"failed",
+				"activating",
+				"deactivating",
+				"maintenance",
+				"refreshing",
+			},
+		},
 		{
 			"UnitFileState",
 			[]string{
@@ -384,6 +395,11 @@ func (p *Plugin) setUnitStates(v map[string]interface{}) {
 				"static",
 				"disabled",
 				"invalid",
+				"alias",
+				"indirect",
+				"generated",
+				"transient",
+				"bad",
 			},
 		},
 	}
@@ -406,6 +422,25 @@ func (p *Plugin) createStateMapping(v map[string]interface{}, key string, names 
 	} else {
 		p.Debugf("cannot create mapping for '%s' unit state: unit state with information type string not found", key)
 	}
+}
+
+// isDiscoverableUnitFile returns true for unit files of units that are not loaded and must be added to discovery:
+// disabled units and units created by generators (e.g. fstab entries with "noauto"), unit templates are skipped.
+func isDiscoverableUnitFile(f unitFile, ext string, units []unitJson) bool {
+	if f.EnablementState != "disabled" && f.EnablementState != "generated" {
+		return false
+	}
+
+	unitFileExt := filepath.Ext(f.Name)
+	if len(ext) != 0 && ext != unitFileExt {
+		return false
+	}
+
+	if strings.HasSuffix(strings.TrimSuffix(f.Name, unitFileExt), "@") {
+		return false
+	}
+
+	return !isEnabledUnit(units, filepath.Base(f.Name))
 }
 
 func isEnabledUnit(units []unitJson, p string) bool {
