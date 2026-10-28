@@ -42,6 +42,7 @@ This template has been tested on:
 |{$SYSTEMD.UNITFILESTATE.SERVICE.NOT_MATCHES}|<p>Filter of systemd service units by unit file state.</p>|`CHANGE_IF_NEEDED`|
 |{$SYSTEMD.SERVICETYPE.SERVICE.MATCHES}|<p>Filter of systemd service units by service type.</p>|`.+`|
 |{$SYSTEMD.SERVICETYPE.SERVICE.NOT_MATCHES}|<p>Filter of systemd service units by service type.</p>|`CHANGE_IF_NEEDED`|
+|{$SYSTEMD.TRIGGEREDBY.SERVICE.MATCHES}|<p>Services activated by matching units (timers, sockets, paths) are inactive between activations, so only the failed state is reported for them.</p>|`.+`|
 
 ### LLD rule Service units discovery
 
@@ -64,6 +65,7 @@ This template has been tested on:
 |Name|Description|Expression|Severity|Dependencies and additional info|
 |----|-----------|----------|--------|--------------------------------|
 |Systemd: {#UNIT.NAME}: Service is not running||`last(/Systemd by Zabbix agent 2/systemd.service.active_state["{#UNIT.NAME}"])<>1`|Warning|**Manual close**: Yes|
+|Systemd: {#UNIT.NAME}: Service has failed|<p>The service is activated by {#UNIT.TRIGGEREDBY} and is inactive between activations, so only the failed state is reported.</p>|`last(/Systemd by Zabbix agent 2/systemd.service.active_state["{#UNIT.NAME}"])=4`|Warning|**Manual close**: Yes|
 |Systemd: {#UNIT.NAME} has been restarted|<p>Uptime is less than 10 minutes.</p>|`last(/Systemd by Zabbix agent 2/systemd.service.uptime["{#UNIT.NAME}"])<10m`|Info|**Manual close**: Yes|
 
 ### LLD rule Socket units discovery
