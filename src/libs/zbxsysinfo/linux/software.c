@@ -291,9 +291,9 @@ static void	rpm_details(const char *manager, const char *line, const char *regex
 				"%%" ZBX_FS_SIZE_T "[^,],"
 				"%%" ZBX_FS_SIZE_T "[^,],"
 				"%%" ZBX_FS_SIZE_T "[^,],"
+				"%" ZBX_FS_UI64 ","
 				"%" ZBX_FS_TIME_T ","
-				"%" ZBX_FS_TIME_T ","
-				"%" ZBX_FS_UI64,
+				"%" ZBX_FS_TIME_T,
 				(zbx_fs_size_t)(sizeof(name) - 1),
 				(zbx_fs_size_t)(sizeof(version) - 1),
 				(zbx_fs_size_t)(sizeof(arch) - 1));
@@ -675,7 +675,7 @@ static ZBX_PACKAGE_MANAGER	package_managers[] =
 		"rpm",
 		"rpm --version 2> /dev/null",
 		"rpm -qa",
-		"LC_ALL=C rpm -qa --queryformat '%{NAME},%{VERSION}-%{RELEASE},%{ARCH},%{SIZE},%{BUILDTIME},%{INSTALLTIME}\n'",
+		"LC_ALL=C rpm -qa --queryformat '%{NAME},%{VERSION}-%{RELEASE},%{ARCH},%{LONGSIZE},%{BUILDTIME},%{INSTALLTIME}\n'",
 		NULL,
 		rpm_details
 	},
