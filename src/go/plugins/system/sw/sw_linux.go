@@ -96,7 +96,7 @@ func getManagers() []manager {
 			"rpm",
 			"rpm --version 2> /dev/null",
 			"rpm -qa",
-			"LC_ALL=C rpm -qa --queryformat '%{NAME},%{VERSION}-%{RELEASE},%{ARCH},%{SIZE},%{BUILDTIME},%{INSTALLTIME}\n'",
+			"LC_ALL=C rpm -qa --queryformat '%{NAME},%{VERSION}-%{RELEASE},%{ARCH},%{LONGSIZE},%{BUILDTIME},%{INSTALLTIME}\n'",
 			parseRegex,
 			rpmDetails,
 		},

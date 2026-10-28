@@ -1,0 +1,1 @@
+...G...... [ZBX-26961] fixed system.sw.packages.get failing on rpm packages larger than 4 GiB (EGKrb)
