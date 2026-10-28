@@ -17,6 +17,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"golang.zabbix.com/sdk/errs"
 	"golang.zabbix.com/sdk/plugin"
@@ -52,6 +53,7 @@ type stats struct {
 	PreCPUStats cpuStats    `json:"precpu_stats"`
 	MemoryStats memoryStats `json:"memory_stats"`
 	PIDsStats   pidsStats   `json:"pids_stats"`
+	BlkioStats  blkioStats  `json:"blkio_stats"`
 }
 
 // cpuUsage stores all CPU stats aggregated since container inception.
@@ -90,6 +92,23 @@ type memoryStats struct {
 	PrivateWorkingSet uint64            `json:"privateworkingset"`
 }
 
+// blkioStatEntry is one counter of one block device ("op" is "Read", "Write", ... on cgroup v1 and
+// "read", "write" on cgroup v2).
+type blkioStatEntry struct {
+	Major uint64 `json:"major"`
+	Minor uint64 `json:"minor"`
+	Op    string `json:"op"`
+	Value uint64 `json:"value"`
+}
+
+// blkioStats stores bytes read and written by one container since container inception on Linux, totals are
+// summed over all devices. Docker reports only bytes with cgroup v2, so operation counters are not used.
+type blkioStats struct {
+	IOServiceBytesRecursive []blkioStatEntry `json:"io_service_bytes_recursive"`
+	ReadBytes               uint64           `json:"read_bytes"`
+	WriteBytes              uint64           `json:"write_bytes"`
+}
+
 // pidsStats holds pid information.
 type pidsStats struct {
 	Current uint64 `json:"current"`
@@ -111,6 +130,7 @@ func keyContainerStatsHandler(
 	}
 
 	data.setCPUPercentUsage()
+	data.BlkioStats.setTotals()
 
 	result, err := json.Marshal(data)
 	if err != nil {
@@ -126,4 +146,16 @@ func (s *stats) setCPUPercentUsage() {
 	systemDelta := s.CPUStats.SystemUsage - s.PreCPUStats.SystemUsage
 	cpuNum := s.CPUStats.OnlineCPUs
 	s.CPUStats.CPUUsage.PercentUsage = (float64(delta) / float64(systemDelta)) * float64(cpuNum) * 100.0
+}
+
+// setTotals sums bytes read and written over all devices, the same way as docker stats does.
+func (b *blkioStats) setTotals() {
+	for _, e := range b.IOServiceBytesRecursive {
+		switch {
+		case strings.EqualFold(e.Op, "read"):
+			b.ReadBytes += e.Value
+		case strings.EqualFold(e.Op, "write"):
+			b.WriteBytes += e.Value
+		}
+	}
 }
