@@ -80,9 +80,9 @@ Test availability: `zabbix_get -s docker-host -k docker.info`
 |Default runtime||Dependent item|docker.default_runtime<p>**Preprocessing**</p><ul><li><p>JSON Path: `$.DefaultRuntime`</p></li><li><p>Discard unchanged with heartbeat: `1d`</p></li></ul>|
 |Live restore enabled||Dependent item|docker.live_restore.enabled<p>**Preprocessing**</p><ul><li><p>JSON Path: `$.LiveRestoreEnabled`</p></li><li>Boolean to decimal</li><li><p>Discard unchanged with heartbeat: `1d`</p></li></ul>|
 |Layers size||Dependent item|docker.layers_size<p>**Preprocessing**</p><ul><li><p>JSON Path: `$.LayersSize`</p></li></ul>|
-|Images size||Dependent item|docker.images_size<p>**Preprocessing**</p><ul><li><p>JSON Path: `$.Images[*].Size.sum()`</p></li></ul>|
-|Containers size||Dependent item|docker.containers_size<p>**Preprocessing**</p><ul><li><p>JSON Path: `$.Containers[*].SizeRw.sum()`</p></li></ul>|
-|Volumes size||Dependent item|docker.volumes_size<p>**Preprocessing**</p><ul><li><p>JSON Path: `$.Volumes[*].UsageData.Size.sum()`</p></li></ul>|
+|Images size||Dependent item|docker.images_size<p>**Preprocessing**</p><ul><li><p>JSON Path: `$.Images[*].Size.sum()`</p><p>⛔️Custom on fail: Set value to: `0`</p></li></ul>|
+|Containers size||Dependent item|docker.containers_size<p>**Preprocessing**</p><ul><li><p>JSON Path: `$.Containers[*].SizeRw.sum()`</p><p>⛔️Custom on fail: Set value to: `0`</p></li></ul>|
+|Volumes size||Dependent item|docker.volumes_size<p>**Preprocessing**</p><ul><li><p>JSON Path: `$.Volumes[?(@.UsageData.Size >= 0)].UsageData.Size.sum()`</p><p>⛔️Custom on fail: Set value to: `0`</p></li></ul>|
 |Images available|<p>Number of top-level images.</p>|Dependent item|docker.images.top_level<p>**Preprocessing**</p><ul><li><p>JSON Path: `$.length()`</p></li></ul>|
 
 ### Triggers
