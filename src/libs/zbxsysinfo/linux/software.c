@@ -194,6 +194,12 @@ int	system_sw_os(AGENT_REQUEST *request, AGENT_RESULT *result)
 	return ret;
 }
 
+/* selection states of installed packages, "hold" is set by apt-mark hold */
+static int	dpkg_selected(const char *want)
+{
+	return 0 == strcmp(want, "install") || 0 == strcmp(want, "hold");
+}
+
 static int	dpkg_list(const char *line, char *package, size_t max_package_len)
 {
 	char	fmt[32], tmp[32];
@@ -201,7 +207,7 @@ static int	dpkg_list(const char *line, char *package, size_t max_package_len)
 	zbx_snprintf(fmt, sizeof(fmt), "%%" ZBX_FS_SIZE_T "s %%" ZBX_FS_SIZE_T "s",
 			(zbx_fs_size_t)(max_package_len - 1), (zbx_fs_size_t)(sizeof(tmp) - 1));
 
-	if (2 != sscanf(line, fmt, package, tmp) || 0 != strcmp(tmp, "install"))
+	if (2 != sscanf(line, fmt, package, tmp) || 0 == dpkg_selected(tmp))
 		return FAIL;
 
 	return SUCCEED;
@@ -263,7 +269,7 @@ static void	dpkg_details(const char *manager, const char *line, const char *rege
 	}
 #undef NUM_FIELDS
 
-	if (0 != strcmp(status, "install ok installed"))
+	if (0 != strcmp(status, "install ok installed") && 0 != strcmp(status, "hold ok installed"))
 		return;
 
 	if (NULL != regex && NULL == zbx_regexp_match(name, regex, NULL))

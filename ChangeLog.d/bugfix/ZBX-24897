@@ -1,0 +1,1 @@
+...G...... [ZBX-24897] fixed system.sw.packages and system.sw.packages.get ignoring held dpkg packages (EGKrb)
