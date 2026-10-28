@@ -1136,6 +1136,46 @@ zabbix_export:
                   value: raw
                 - tag: container
                   value: '{#NAME}'
+            - uuid: 85af210ea01f4b70a6342778a3f8c820
+              name: 'Container {#NAME}: Block IO bytes read per second'
+              type: DEPENDENT
+              key: 'docker.container_stats.blkio.read_bytes["{#NAME}"]'
+              value_type: FLOAT
+              units: B
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.blkio_stats.read_bytes
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: '0'
+                - type: CHANGE_PER_SECOND
+              master_item:
+                key: 'docker.container_stats["{#NAME}"]'
+              tags:
+                - tag: component
+                  value: storage
+                - tag: container
+                  value: '{#NAME}'
+            - uuid: 1a670c470f8b49178b81e7f11123953f
+              name: 'Container {#NAME}: Block IO bytes written per second'
+              type: DEPENDENT
+              key: 'docker.container_stats.blkio.write_bytes["{#NAME}"]'
+              value_type: FLOAT
+              units: B
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.blkio_stats.write_bytes
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: '0'
+                - type: CHANGE_PER_SECOND
+              master_item:
+                key: 'docker.container_stats["{#NAME}"]'
+              tags:
+                - tag: component
+                  value: storage
+                - tag: container
+                  value: '{#NAME}'
             - uuid: d54b82d76c7b44ca8995486e4bf46298
               name: 'Container {#NAME}: CPU percent usage'
               type: DEPENDENT
@@ -1588,6 +1628,20 @@ zabbix_export:
                 - tag: scope
                   value: availability
           graph_prototypes:
+            - uuid: e3e81b5c05b54a06a5e0ccb8f429841f
+              name: 'Container {#NAME}: Block IO'
+              graph_items:
+                - drawtype: BOLD_LINE
+                  color: 199C0D
+                  item:
+                    host: 'Docker by Zabbix agent 2'
+                    key: 'docker.container_stats.blkio.read_bytes["{#NAME}"]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: F63100
+                  item:
+                    host: 'Docker by Zabbix agent 2'
+                    key: 'docker.container_stats.blkio.write_bytes["{#NAME}"]'
             - uuid: 72e32a60dc064affb3bb6785bae50e37
               name: 'Container {#NAME}: CPU usage'
               type: STACKED
