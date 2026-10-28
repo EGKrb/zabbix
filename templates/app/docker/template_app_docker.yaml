@@ -140,6 +140,8 @@ zabbix_export:
             - type: JSONPATH
               parameters:
                 - '$.Containers[*].SizeRw.sum()'
+              error_handler: CUSTOM_VALUE
+              error_handler_params: '0'
           master_item:
             key: docker.data_usage
           tags:
@@ -350,6 +352,8 @@ zabbix_export:
             - type: JSONPATH
               parameters:
                 - '$.Images[*].Size.sum()'
+              error_handler: CUSTOM_VALUE
+              error_handler_params: '0'
           master_item:
             key: docker.data_usage
           tags:
@@ -758,7 +762,9 @@ zabbix_export:
           preprocessing:
             - type: JSONPATH
               parameters:
-                - '$.Volumes[*].UsageData.Size.sum()'
+                - '$.Volumes[?(@.UsageData.Size >= 0)].UsageData.Size.sum()'
+              error_handler: CUSTOM_VALUE
+              error_handler_params: '0'
           master_item:
             key: docker.data_usage
           tags:
