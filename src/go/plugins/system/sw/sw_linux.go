@@ -641,7 +641,10 @@ func getParams(params []string, maxparams int) (regex string, manager string, sh
 
 		fallthrough
 	case 1:
-		regex = params[0]
+		// "all" is a keyword for all packages, not a regular expression
+		if params[0] != "all" {
+			regex = params[0]
+		}
 	}
 
 	return

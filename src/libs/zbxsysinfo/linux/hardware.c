@@ -593,8 +593,12 @@ int	system_hw_macaddr(AGENT_REQUEST *request, AGENT_RESULT *result)
 	/* go through the list */
 	for (int i = ifc.ifc_len / sizeof(struct ifreq); 0 < i--; ifr++)
 	{
-		if (NULL != regex && '\0' != *regex && NULL == zbx_regexp_match(ifr->ifr_name, regex, NULL))
+		/* "all" is a keyword for all interfaces, not a regular expression */
+		if (NULL != regex && '\0' != *regex && 0 != strcmp(regex, "all") &&
+				NULL == zbx_regexp_match(ifr->ifr_name, regex, NULL))
+		{
 			continue;
+		}
 
 		if (-1 != ioctl(s, SIOCGIFFLAGS, ifr) &&		/* get the interface */
 				0 == (ifr->ifr_flags & IFF_LOOPBACK) &&	/* skip loopback interface */
