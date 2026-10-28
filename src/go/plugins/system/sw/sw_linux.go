@@ -149,6 +149,11 @@ func parseRegex(in []string, regex string) (out []string, err error) {
 	return
 }
 
+// dpkgSelected returns true for the dpkg selection states of installed packages, "hold" is set by apt-mark hold.
+func dpkgSelected(want string) bool {
+	return want == "install" || want == "hold"
+}
+
 func dpkgList(in []string, regex string) (out []string, err error) {
 	rgx, err := regexp.Compile(regex)
 	if err != nil {
@@ -157,7 +162,7 @@ func dpkgList(in []string, regex string) (out []string, err error) {
 
 	for _, s := range in {
 		split := strings.Fields(s)
-		if len(split) < 2 || split[len(split)-1] != "install" {
+		if len(split) < 2 || !dpkgSelected(split[len(split)-1]) {
 			continue
 		}
 
@@ -216,7 +221,8 @@ func dpkgDetails(manager string, in []string, regex string) (out string, err err
 			continue
 		}
 
-		if split[0] != "install ok installed" {
+		// held packages are installed as well, e.g. "hold ok installed"
+		if want, state, _ := strings.Cut(split[0], " "); !dpkgSelected(want) || state != "ok installed" {
 			continue
 		}
 
