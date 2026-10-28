@@ -1,0 +1,1 @@
+...G...... [ZBX-26497] fixed keyword "all" being used as a regular expression in system.sw.packages, system.sw.packages.get (agent 2) and system.hw.macaddr (EGKrb)
