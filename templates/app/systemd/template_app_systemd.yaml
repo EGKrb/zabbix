@@ -85,6 +85,16 @@ zabbix_export:
                   tags:
                     - tag: scope
                       value: availability
+                - uuid: f8ac6842bee7463785d776400533f539
+                  expression: 'last(/Systemd by Zabbix agent 2/systemd.service.active_state["{#UNIT.NAME}"])=4'
+                  name: 'Systemd: {#UNIT.NAME}: Service has failed'
+                  discover: NO_DISCOVER
+                  priority: WARNING
+                  description: 'The service is activated by {#UNIT.TRIGGEREDBY} and is inactive between activations, so only the failed state is reported.'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: scope
+                      value: availability
             - uuid: bed610e6ce33494b817eb787e34e18c2
               name: '{#UNIT.NAME}: Load state'
               type: DEPENDENT
@@ -168,6 +178,22 @@ zabbix_export:
                   value: raw
                 - tag: component
                   value: unit
+          overrides:
+            - name: 'Triggered services'
+              step: '1'
+              filter:
+                conditions:
+                  - macro: '{#UNIT.TRIGGEREDBY}'
+                    value: '{$SYSTEMD.TRIGGEREDBY.SERVICE.MATCHES}'
+              operations:
+                - operationobject: TRIGGER_PROTOTYPE
+                  operator: LIKE
+                  value: 'Service is not running'
+                  discover: NO_DISCOVER
+                - operationobject: TRIGGER_PROTOTYPE
+                  operator: LIKE
+                  value: 'Service has failed'
+                  discover: DISCOVER
         - uuid: 5c337762ae7b43a98fcb9dc3102a8467
           name: 'Socket units discovery'
           key: 'systemd.unit.discovery[socket]'
@@ -333,6 +359,15 @@ zabbix_export:
             section_name: Filters
             label: 'Systemd service type filter (exclude)'
             description: 'Filter of systemd service units by service type.'
+        - macro: '{$SYSTEMD.TRIGGEREDBY.SERVICE.MATCHES}'
+          value: .+
+          description: 'Services activated by matching units (timers, sockets, paths) are inactive between activations, so only the failed state is reported for them.'
+          config:
+            type: TEXT
+            priority: '15'
+            section_name: Triggers
+            label: 'Systemd service activated by units (failed state only)'
+            description: 'Services activated by matching units (timers, sockets, paths) are inactive between activations, so only the failed state is reported for them.'
         - macro: '{$SYSTEMD.UNITFILESTATE.SERVICE.MATCHES}'
           value: ^enabled$
           description: 'Filter of systemd service units by unit file state.'

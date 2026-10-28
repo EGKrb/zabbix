@@ -67,6 +67,7 @@ type unitJson struct {
 	JobPath       string `json:"{#UNIT.JOBPATH}"`
 	UnitFileState string `json:"{#UNIT.UNITFILESTATE}"`
 	ServiceType   string `json:"{#UNIT.SERVICETYPE}"` //nolint:tagliatelle
+	TriggeredBy   string `json:"{#UNIT.TRIGGEREDBY}"` //nolint:tagliatelle
 }
 
 type state struct {
@@ -213,6 +214,24 @@ func (p *Plugin) getServiceType(name string, conn *dbus.Conn) string {
 	return typeString
 }
 
+// getTriggeredBy returns comma separated units (timers, sockets, paths) that activate the unit,
+// empty if there are none or systemd is older than 243.
+func (p *Plugin) getTriggeredBy(name string, conn *dbus.Conn) string {
+	var units []string
+
+	obj := conn.Object("org.freedesktop.systemd1", dbus.ObjectPath("/org/freedesktop/systemd1/unit/"+getName(name)))
+
+	err := obj.Call("org.freedesktop.DBus.Properties.Get", 0, "org.freedesktop.systemd1.Unit", "TriggeredBy").
+		Store(&units)
+	if err != nil {
+		p.Debugf("failed to retrieve triggered by units for %s, err:%s", name, err.Error())
+
+		return ""
+	}
+
+	return strings.Join(units, ",")
+}
+
 func (p *Plugin) discovery(params []string, conn *dbus.Conn) (interface{}, error) {
 	var ext string
 
@@ -270,6 +289,7 @@ func (p *Plugin) discovery(params []string, conn *dbus.Conn) (interface{}, error
 		array = append(array, unitJson{
 			u.Name, u.Description, u.LoadState, u.ActiveState,
 			u.SubState, u.Followed, u.Path, u.JobID, u.JobType, u.JobPath, state, serviceType,
+			p.getTriggeredBy(u.Name, conn),
 		})
 	}
 
@@ -284,7 +304,7 @@ func (p *Plugin) discovery(params []string, conn *dbus.Conn) (interface{}, error
 		serviceType := p.getServiceType(f.Name, conn)
 
 		array = append(array, unitJson{basePath, "", "", "inactive", "", "", unitPath, 0, "", "",
-			f.EnablementState, serviceType})
+			f.EnablementState, serviceType, ""})
 	}
 
 	jsonArray, err := json.Marshal(array)
