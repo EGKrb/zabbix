@@ -2631,7 +2631,7 @@ return [
 			'opdata' => [
 				'null' => false,
 				'type' => DB::FIELD_TYPE_CHAR,
-				'length' => 255,
+				'length' => 2048,
 				'default' => ''
 			],
 			'discover' => [
@@ -10277,6 +10277,41 @@ return [
 				'length' => 20,
 				'ref_table' => 'proxy_group',
 				'ref_field' => 'proxy_groupid'
+			]
+		]
+	],
+	'usrgrp_apm_filter' => [
+		'key' => 'usrgrp_apm_filterid',
+		'fields' => [
+			'usrgrp_apm_filterid' => [
+				'null' => false,
+				'type' => DB::FIELD_TYPE_ID,
+				'length' => 20
+			],
+			'usrgrpid' => [
+				'null' => false,
+				'type' => DB::FIELD_TYPE_ID,
+				'length' => 20,
+				'ref_table' => 'usrgrp',
+				'ref_field' => 'usrgrpid'
+			],
+			'attribute_key' => [
+				'null' => false,
+				'type' => DB::FIELD_TYPE_CHAR,
+				'length' => 255,
+				'default' => ''
+			],
+			'value' => [
+				'null' => false,
+				'type' => DB::FIELD_TYPE_CHAR,
+				'length' => 255,
+				'default' => ''
+			],
+			'signal_type' => [
+				'null' => false,
+				'type' => DB::FIELD_TYPE_INT,
+				'length' => 10,
+				'default' => '-1'
 			]
 		]
 	],

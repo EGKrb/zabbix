@@ -533,6 +533,7 @@ class CAudit {
 		'userdirectory.provision_media' => 'userdirectory_media',
 		'userdirectory.provision_groups' => 'userdirectory_idpgroup',
 		'userdirectory.provision_groups.user_groups' => 'userdirectory_usrgrp',
+		'usergroup.apm_filters' => 'usrgrp_apm_filter',
 		'usergroup.hostgroup_rights' => 'rights',
 		'usergroup.templategroup_rights' => 'rights',
 		'usergroup.tag_filters' => 'tag_filter',
@@ -548,6 +549,8 @@ class CAudit {
 	 */
 	private const SCALAR_VALUE_LIST_FIELD = [
 		'ceprule.window.tags',
+		'discoveryrule.query.aggregated_columns.parameters',
+		'discoveryruleprototype.query.aggregated_columns.parameters',
 		'item.query.aggregated_columns.parameters',
 		'itemprototype.query.aggregated_columns.parameters'
 	];
@@ -603,6 +606,9 @@ class CAudit {
 		'discoveryrule.parameters' => 'item_parameterid',
 		'discoveryrule.preprocessing' => 'item_preprocid',
 		'discoveryrule.query_fields' => 'sortorder',
+		'discoveryrule.query.aggregated_columns' => null,
+		'discoveryrule.query.columns' => null,
+		'discoveryrule.query.filter.conditions' => null,
 		'discoveryruleprototype.filter.conditions' => 'item_conditionid',
 		'discoveryruleprototype.headers' => 'sortorder',
 		'discoveryruleprototype.lld_macro_paths' => 'lld_macro_pathid',
@@ -614,6 +620,9 @@ class CAudit {
 		'discoveryruleprototype.parameters' => 'item_parameterid',
 		'discoveryruleprototype.preprocessing' => 'item_preprocid',
 		'discoveryruleprototype.query_fields' => 'sortorder',
+		'discoveryruleprototype.query.aggregated_columns' => null,
+		'discoveryruleprototype.query.columns' => null,
+		'discoveryruleprototype.query.filter.conditions' => null,
 		'hostgroup.hosts' => 'hostgroupid',
 		'hostprototype.groupLinks' => 'group_prototypeid',
 		'hostprototype.groupPrototypes' => 'group_prototypeid',
@@ -675,6 +684,7 @@ class CAudit {
 		'userdirectory.provision_media' => 'userdirectory_mediaid',
 		'userdirectory.provision_groups' => 'userdirectory_idpgroupid',
 		'userdirectory.provision_groups.user_groups' => 'userdirectory_usrgrpid',
+		'usergroup.apm_filters' => 'usrgrp_apm_filterid',
 		'usergroup.hostgroup_rights' => 'rightid',
 		'usergroup.templategroup_rights' => 'rightid',
 		'usergroup.tag_filters' => 'tag_filterid',
